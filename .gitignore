@@ -43,8 +43,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -54,6 +52,10 @@ wheels/
 *.egg
 *.db
 *.sqlite3
+
+# Explicitly ensure frontend lib is tracked
+!ndr-frontend/src/lib/**
+
 
 # IDE
 .idea/
