@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: ndr-security-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: ndr-backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: "http://localhost:3000,https://*.vercel.app,*"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ndr-postgres-db
+          property: connectionString
+
+databases:
+  - name: ndr-postgres-db
+    plan: free
+    region: oregon
+    databaseName: ndr_threat_db
+    user: ndr_admin
