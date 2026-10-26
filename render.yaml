@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ndr-backend
+    env: docker
+    dockerfilePath: ./ndr-backend/Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: HOST
+        value: "0.0.0.0"
+      - key: DATABASE_URL
+        value: "sqlite:///./ndr_threats.db"
+      - key: CORS_ORIGINS
+        value: "https://deep-learning-based-network-attack-five.vercel.app"
+      - key: MONGO_URI
+        fromSecret: MONGO_URI
