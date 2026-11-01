@@ -6,6 +6,12 @@ export type AttackType =
   | "APPLAYER_EXPLOIT"
   | "ROGUE_NODE_JOIN";
 
+export type SectorScope = 
+  | "global" 
+  | "dmz_analyst" 
+  | "cloud_hunter" 
+  | "lan_junior";
+
 export interface NetworkNode {
   id: string;
   name: string;
@@ -100,6 +106,9 @@ export interface GnnInferenceResult {
 
 export interface TelemetryBurst {
   type: "TELEMETRY_BURST";
+  sector_scope: SectorScope;
+  sector_name: string;
+  workstation_device: string;
   active_attack: AttackType | null;
   attack_metadata: {
     name: string;
@@ -144,4 +153,55 @@ export interface BlastRadiusResult {
   affected_count: number;
   aggregate_exposure_score: number;
   containment_recommendation: string;
+}
+
+export interface DeviceHardwareInfo {
+  deviceId: string;
+  workstationModel: string;
+  osName: string;
+  kernelVersion: string;
+  ipAddress: string;
+  macAddress: string;
+  assignedEmployeeId: string;
+  assignedEmployeeName: string;
+  assignedSector: string;
+  tpmStatus: "ACTIVE_TPM2" | "APPLE_SECURE_ENCLAVE" | "VIRTUAL_HSM";
+  secureBoot: boolean;
+  wireguardTunnel: "CONNECTED" | "DEGRADED" | "STANDBY";
+  ebpfProbeState: "RING0_HOOKED" | "PROMISCUOUS_CAPTURING";
+  cpuUsagePct: number;
+  ramAllocatedMb: number;
+  localPacketBufferCount: number;
+  networkInterface: string;
+  lastAttestationCheck: string;
+}
+
+export interface RawHexPacket {
+  id: string;
+  timestamp: string;
+  lengthBytes: number;
+  protocol: string;
+  srcIp: string;
+  srcPort: number;
+  dstIp: string;
+  dstPort: number;
+  tcpFlags: { syn: boolean; ack: boolean; fin: boolean; rst: boolean; psh: boolean };
+  ttl: number;
+  checksum: string;
+  hexLines: string[];
+  asciiDump: string;
+  signatureMatch?: string;
+  dnnVerdict?: string;
+}
+
+export interface AiSecurityRecommendation {
+  id: string;
+  threatTitle: string;
+  sectorScope: SectorScope;
+  affectedTarget: string;
+  confidencePct: number;
+  recommendedCountermeasure: string;
+  actionKey: "MICROSEGMENT_CANARY" | "FLUSH_ARP_CACHE" | "REVOKE_KERBEROS_TOKEN" | "ISOLATE_PERIMETER_HOP";
+  blastRadiusMitigationPct: number;
+  executed: boolean;
 }

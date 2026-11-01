@@ -1,4 +1,4 @@
-import { TelemetryBurst, AttackType } from "@/types/telemetry";
+import { TelemetryBurst, AttackType, SectorScope } from "@/types/telemetry";
 import { mockTelemetryWorker } from "./mockTelemetryWorker";
 
 type ConnectionStatus = "connected_render" | "fallback_mock" | "connecting";
@@ -122,6 +122,32 @@ class TelemetryClient {
       clearInterval(this.fallbackInterval);
       this.fallbackInterval = null;
     }
+  }
+
+  public setSector(sector: SectorScope) {
+    mockTelemetryWorker.setSector(sector);
+    this.notifySubscribers(mockTelemetryWorker.generateBurst());
+  }
+
+  public getSector(): SectorScope {
+    return mockTelemetryWorker.getSector();
+  }
+
+  public getDeviceHardwareInfo() {
+    return mockTelemetryWorker.getDeviceHardwareInfo();
+  }
+
+  public getRawHexPackets() {
+    return mockTelemetryWorker.getRawHexPackets();
+  }
+
+  public getAiRecommendations() {
+    return mockTelemetryWorker.getAiRecommendations();
+  }
+
+  public executeAiRecommendation(id: string) {
+    mockTelemetryWorker.executeAiRecommendation(id);
+    this.notifySubscribers(mockTelemetryWorker.generateBurst());
   }
 
   public async triggerAttack(attackType: AttackType | null) {

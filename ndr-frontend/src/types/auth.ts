@@ -1,3 +1,5 @@
+import { SectorScope } from "./telemetry";
+
 export type UserRole = "manager" | "employee";
 
 export type ClearanceLevel = "LEVEL_4_EXECUTIVE" | "LEVEL_2_OPERATOR";
@@ -16,6 +18,9 @@ export interface AuthUser {
   activeSessionId: string;
   lastLogin: string;
   permissions: string[];
+  assignedSector: SectorScope;
+  assignedDeviceId: string;
+  assignedDeviceIp: string;
 }
 
 export type ActionSeverity = "CRITICAL" | "WARN" | "INFO";
@@ -51,5 +56,5 @@ export interface EmployeeProfile {
   recentActionsCount: number;
   lastActive: string;
   assignedWorkstation: string;
+  assignedSector: SectorScope;
 }
-

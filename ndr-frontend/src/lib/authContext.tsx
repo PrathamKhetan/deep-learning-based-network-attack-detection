@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { AuthUser, EmployeeAuditRecord, EmployeeProfile, UserRole } from "@/types/auth";
+import { SectorScope } from "@/types/telemetry";
+import { telemetryClient } from "./telemetryClient";
 
 export const DEMO_MANAGER: AuthUser = {
   id: "usr_mgr_001",
@@ -15,6 +17,9 @@ export const DEMO_MANAGER: AuthUser = {
   shift: "Alpha Command (08:00 - 18:00 UTC)",
   activeSessionId: "SES-MGR-99482-SEC",
   lastLogin: "Today, 08:14 UTC",
+  assignedSector: "global",
+  assignedDeviceId: "EXEC-MACBOOK-M3MAX",
+  assignedDeviceIp: "10.0.0.99",
   permissions: [
     "VIEW_ALL_EMPLOYEES",
     "INSPECT_AUDIT_LOGS",
@@ -27,18 +32,67 @@ export const DEMO_MANAGER: AuthUser = {
   ]
 };
 
-export const DEMO_EMPLOYEE: AuthUser = {
+export const DEMO_EMPLOYEE_DAVID: AuthUser = {
   id: "usr_emp_442",
   name: "David Vance",
   email: "analyst@aegis-defense.corp",
   role: "employee",
   clearanceLevel: "LEVEL_2_OPERATOR",
-  department: "Security Operations Center (SOC)",
+  department: "SOC Operations",
   title: "Cyber Threat Analyst (Tier 2)",
   employeeId: "CORP-EMP-4420",
   shift: "Bravo Shift (14:00 - 22:00 UTC)",
   activeSessionId: "SES-EMP-33104-OP",
   lastLogin: "Today, 14:02 UTC",
+  assignedSector: "dmz_analyst",
+  assignedDeviceId: "WS-SOC-104-MBP-M3",
+  assignedDeviceIp: "10.0.4.12",
+  permissions: [
+    "VIEW_LIVE_TELEMETRY",
+    "VIEW_ASSIGNED_INCIDENTS",
+    "EXECUTE_LOCAL_ASM_SCAN",
+    "ACKNOWLEDGE_ALERT"
+  ]
+};
+
+export const DEMO_EMPLOYEE_ELENA: AuthUser = {
+  id: "usr_emp_391",
+  name: "Elena Rostova",
+  email: "e.rostova@aegis-defense.corp",
+  role: "employee",
+  clearanceLevel: "LEVEL_2_OPERATOR",
+  department: "Adversary Tracking",
+  title: "Senior Threat Hunter (Tier 3)",
+  employeeId: "CORP-EMP-3918",
+  shift: "Alpha Shift (08:00 - 16:00 UTC)",
+  activeSessionId: "SES-EMP-88219-OP",
+  lastLogin: "Today, 09:30 UTC",
+  assignedSector: "cloud_hunter",
+  assignedDeviceId: "WS-SOC-208-HUNTER-X",
+  assignedDeviceIp: "10.0.4.18",
+  permissions: [
+    "VIEW_LIVE_TELEMETRY",
+    "VIEW_ASSIGNED_INCIDENTS",
+    "EXECUTE_LOCAL_ASM_SCAN",
+    "ACKNOWLEDGE_ALERT"
+  ]
+};
+
+export const DEMO_EMPLOYEE_MARCUS: AuthUser = {
+  id: "usr_emp_510",
+  name: "Marcus Chen",
+  email: "m.chen@aegis-defense.corp",
+  role: "employee",
+  clearanceLevel: "LEVEL_2_OPERATOR",
+  department: "Incident Triage",
+  title: "SOC Junior Analyst (Tier 1)",
+  employeeId: "CORP-EMP-5102",
+  shift: "Bravo Shift (14:00 - 22:00 UTC)",
+  activeSessionId: "SES-EMP-11928-OP",
+  lastLogin: "Today, 14:15 UTC",
+  assignedSector: "lan_junior",
+  assignedDeviceId: "WS-SOC-312-TRIAGE-01",
+  assignedDeviceIp: "10.0.4.29",
   permissions: [
     "VIEW_LIVE_TELEMETRY",
     "VIEW_ASSIGNED_INCIDENTS",
@@ -60,7 +114,8 @@ export const INITIAL_EMPLOYEE_PROFILES: EmployeeProfile[] = [
     riskScore: 24,
     recentActionsCount: 28,
     lastActive: "2 mins ago",
-    assignedWorkstation: "WS-SOC-104 (10.0.4.12)"
+    assignedWorkstation: "WS-SOC-104 (10.0.4.12)",
+    assignedSector: "dmz_analyst"
   },
   {
     employeeId: "CORP-EMP-3918",
@@ -74,7 +129,8 @@ export const INITIAL_EMPLOYEE_PROFILES: EmployeeProfile[] = [
     riskScore: 12,
     recentActionsCount: 42,
     lastActive: "8 mins ago",
-    assignedWorkstation: "WS-SOC-208 (10.0.4.18)"
+    assignedWorkstation: "WS-SOC-208 (10.0.4.18)",
+    assignedSector: "cloud_hunter"
   },
   {
     employeeId: "CORP-EMP-5102",
@@ -88,7 +144,8 @@ export const INITIAL_EMPLOYEE_PROFILES: EmployeeProfile[] = [
     riskScore: 68,
     recentActionsCount: 19,
     lastActive: "1 min ago",
-    assignedWorkstation: "WS-SOC-312 (10.0.4.29)"
+    assignedWorkstation: "WS-SOC-312 (10.0.4.29)",
+    assignedSector: "lan_junior"
   },
   {
     employeeId: "CORP-EMP-2884",
@@ -102,7 +159,8 @@ export const INITIAL_EMPLOYEE_PROFILES: EmployeeProfile[] = [
     riskScore: 8,
     recentActionsCount: 31,
     lastActive: "3 hours ago",
-    assignedWorkstation: "WS-DFIR-004 (10.0.5.15)"
+    assignedWorkstation: "WS-DFIR-004 (10.0.5.15)",
+    assignedSector: "dmz_analyst"
   },
   {
     employeeId: "CORP-EMP-1903",
@@ -116,7 +174,8 @@ export const INITIAL_EMPLOYEE_PROFILES: EmployeeProfile[] = [
     riskScore: 18,
     recentActionsCount: 22,
     lastActive: "14 mins ago",
-    assignedWorkstation: "WS-ENG-088 (10.0.3.44)"
+    assignedWorkstation: "WS-ENG-088 (10.0.3.44)",
+    assignedSector: "global"
   }
 ];
 
@@ -128,8 +187,8 @@ export const INITIAL_AUDIT_RECORDS: EmployeeAuditRecord[] = [
     email: "analyst@aegis-defense.corp",
     role: "employee",
     department: "SOC Operations",
-    action: "Remediated Network Node (Isolate)",
-    targetResource: "CORE-SWITCH-01 [10.0.1.1]",
+    action: "Quarantined DMZ WAF Route",
+    targetResource: "node-dmz-waf [10.0.4.1]",
     sourceIp: "10.0.4.12",
     timestamp: "10 mins ago",
     severity: "CRITICAL",
@@ -145,13 +204,13 @@ export const INITIAL_AUDIT_RECORDS: EmployeeAuditRecord[] = [
     role: "employee",
     department: "Incident Triage",
     action: "Failed Sudo Privilege Elevation",
-    targetResource: "PROBE-SOC-GATEWAY [10.0.3.50]",
+    targetResource: "DC-01 [192.168.1.10]",
     sourceIp: "10.0.4.29",
     timestamp: "18 mins ago",
     severity: "WARN",
     status: "FLAGGED",
     riskScore: 78,
-    details: "Repeated unauthorized attempt to access supervisor shell without dual-key clearance."
+    details: "Repeated unauthorized attempt to access Domain Controller without dual-key clearance."
   },
   {
     id: "AUD-9019",
@@ -160,14 +219,14 @@ export const INITIAL_AUDIT_RECORDS: EmployeeAuditRecord[] = [
     email: "e.rostova@aegis-defense.corp",
     role: "employee",
     department: "Adversary Tracking",
-    action: "Triggered Attack Vector Simulation",
-    targetResource: "SIM-ENGINE [DDoS SYN Flood]",
+    action: "Executed eBPF Container Audit",
+    targetResource: "K8S-CLUSTER [172.16.0.10]",
     sourceIp: "10.0.4.18",
     timestamp: "32 mins ago",
     severity: "INFO",
     status: "SUCCESS",
     riskScore: 15,
-    details: "Authorized simulated adversary stress test against Tabular DNN model."
+    details: "Audited privileged namespaces for container breakout and namespace evasion attempts."
   },
   {
     id: "AUD-9018",
@@ -176,14 +235,14 @@ export const INITIAL_AUDIT_RECORDS: EmployeeAuditRecord[] = [
     email: "analyst@aegis-defense.corp",
     role: "employee",
     department: "SOC Operations",
-    action: "Exported Flow Packet Inspection",
-    targetResource: "DATABASE-CLUSTER-01 [10.0.2.20]",
+    action: "Exported Forensic PCAP Dissection",
+    targetResource: "node-dmz-waf [10.0.4.1]",
     sourceIp: "10.0.4.12",
     timestamp: "45 mins ago",
     severity: "INFO",
     status: "SUCCESS",
     riskScore: 10,
-    details: "Downloaded 50MB PCAP flow stream for entropy inspection and header attribution."
+    details: "Downloaded 50MB raw hex stream for packet entropy verification."
   },
   {
     id: "AUD-9017",
@@ -200,38 +259,6 @@ export const INITIAL_AUDIT_RECORDS: EmployeeAuditRecord[] = [
     status: "SUCCESS",
     riskScore: 12,
     details: "Scanned perimeter for CVE-2023-44487 and CVE-2024-21626 blast radius."
-  },
-  {
-    id: "AUD-9016",
-    employeeId: "CORP-EMP-5102",
-    employeeName: "Marcus Chen",
-    email: "m.chen@aegis-defense.corp",
-    role: "employee",
-    department: "Incident Triage",
-    action: "Restored Severed Neural Edge",
-    targetResource: "EDGE: 10.0.1.1 -> 10.0.2.10",
-    sourceIp: "10.0.4.29",
-    timestamp: "1 hour 20 mins ago",
-    severity: "WARN",
-    status: "SUCCESS",
-    riskScore: 40,
-    details: "Restored connectivity after automated containment window expired."
-  },
-  {
-    id: "AUD-9015",
-    employeeId: "CORP-EMP-2884",
-    employeeName: "Sophia Martinez",
-    email: "s.martinez@aegis-defense.corp",
-    role: "employee",
-    department: "Digital Forensics & IR",
-    action: "Submitted Forensic Incident Report",
-    targetResource: "INC-2026-0881 [Stealth Recon]",
-    sourceIp: "10.0.5.15",
-    timestamp: "2 hours ago",
-    severity: "INFO",
-    status: "SUCCESS",
-    riskScore: 5,
-    details: "Closed triage ticket; identified reconnaissance port scan originating from external proxy."
   }
 ];
 
@@ -240,9 +267,12 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isManager: boolean;
   isEmployee: boolean;
+  currentSector: SectorScope;
+  setSector: (sector: SectorScope) => void;
   login: (email: string, role?: UserRole) => Promise<boolean>;
   logout: () => void;
   switchRole: (role: UserRole) => void;
+  switchUserPersona: (personaKey: "manager" | "david" | "elena" | "marcus") => void;
   auditRecords: EmployeeAuditRecord[];
   employeeProfiles: EmployeeProfile[];
   recordAction: (action: string, targetResource: string, severity?: "CRITICAL" | "WARN" | "INFO", details?: string) => void;
@@ -254,23 +284,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const STORAGE_KEY_USER = "aegis_auth_user";
 const STORAGE_KEY_AUDITS = "aegis_audit_records";
 const STORAGE_KEY_PROFILES = "aegis_employee_profiles";
+const STORAGE_KEY_SECTOR = "aegis_active_sector";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(DEMO_MANAGER); // Default to manager so dashboard is full-featured out of the box
+  const [user, setUser] = useState<AuthUser | null>(DEMO_MANAGER);
+  const [currentSector, setCurrentSectorState] = useState<SectorScope>("global");
   const [auditRecords, setAuditRecords] = useState<EmployeeAuditRecord[]>(INITIAL_AUDIT_RECORDS);
   const [employeeProfiles, setEmployeeProfiles] = useState<EmployeeProfile[]>(INITIAL_EMPLOYEE_PROFILES);
-  const [mounted, setMounted] = useState(false);
 
-  // Initialize from localStorage if present
+  // Initialize from localStorage
   useEffect(() => {
-    setMounted(true);
     try {
       const storedUser = localStorage.getItem(STORAGE_KEY_USER);
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        const sec = parsed.assignedSector || "global";
+        setCurrentSectorState(sec);
+        telemetryClient.setSector(sec);
       } else {
-        // Pre-save default manager session
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(DEMO_MANAGER));
+        telemetryClient.setSector("global");
       }
 
       const storedAudits = localStorage.getItem(STORAGE_KEY_AUDITS);
@@ -287,10 +321,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  const setSector = useCallback((sector: SectorScope) => {
+    // If not manager, can only stay in assigned sector!
+    if (user && user.role !== "manager" && user.assignedSector !== sector) {
+      console.warn("Employee clearance restricted to assigned workstation sector.");
+      return;
+    }
+    setCurrentSectorState(sector);
+    telemetryClient.setSector(sector);
+    try {
+      localStorage.setItem(STORAGE_KEY_SECTOR, sector);
+    } catch {}
+  }, [user]);
+
+  const switchUserPersona = useCallback((personaKey: "manager" | "david" | "elena" | "marcus") => {
+    let nextUser: AuthUser;
+    switch (personaKey) {
+      case "david":
+        nextUser = { ...DEMO_EMPLOYEE_DAVID };
+        break;
+      case "elena":
+        nextUser = { ...DEMO_EMPLOYEE_ELENA };
+        break;
+      case "marcus":
+        nextUser = { ...DEMO_EMPLOYEE_MARCUS };
+        break;
+      default:
+        nextUser = { ...DEMO_MANAGER };
+        break;
+    }
+    nextUser.lastLogin = "Just now";
+    setUser(nextUser);
+    setCurrentSectorState(nextUser.assignedSector);
+    telemetryClient.setSector(nextUser.assignedSector);
+
+    try {
+      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(nextUser));
+    } catch {}
+  }, []);
+
   const login = useCallback(async (email: string, role?: UserRole): Promise<boolean> => {
-    // If role is explicitly provided or detected from email
-    const targetRole = role || (email.toLowerCase().includes("manager") || email.toLowerCase().includes("boss") ? "manager" : "employee");
-    const selectedUser = targetRole === "manager" ? { ...DEMO_MANAGER } : { ...DEMO_EMPLOYEE };
+    let selectedUser: AuthUser;
+
+    const lower = email.toLowerCase();
+    if (lower.includes("elena") || lower.includes("rostova") || lower.includes("hunter")) {
+      selectedUser = { ...DEMO_EMPLOYEE_ELENA };
+    } else if (lower.includes("marcus") || lower.includes("chen") || lower.includes("junior")) {
+      selectedUser = { ...DEMO_EMPLOYEE_MARCUS };
+    } else if (role === "employee" || lower.includes("analyst") || lower.includes("david")) {
+      selectedUser = { ...DEMO_EMPLOYEE_DAVID };
+    } else {
+      selectedUser = { ...DEMO_MANAGER };
+    }
 
     if (email && email.trim().length > 0) {
       selectedUser.email = email;
@@ -298,11 +380,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectedUser.lastLogin = "Just now";
 
     setUser(selectedUser);
+    setCurrentSectorState(selectedUser.assignedSector);
+    telemetryClient.setSector(selectedUser.assignedSector);
+
     try {
       localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(selectedUser));
     } catch {}
 
-    // Record login in audit trail
     const newRecord: EmployeeAuditRecord = {
       id: `AUD-${Date.now().toString().slice(-4)}`,
       employeeId: selectedUser.employeeId,
@@ -310,14 +394,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: selectedUser.email,
       role: selectedUser.role,
       department: selectedUser.department,
-      action: `Corporate Portal SSO Login (${selectedUser.clearanceLevel})`,
-      targetResource: "AUTH-GATEWAY-IDP",
-      sourceIp: "10.0.4.12",
+      action: `SSO Device Authentication (${selectedUser.assignedDeviceId})`,
+      targetResource: `SECTOR: ${selectedUser.assignedSector.toUpperCase()}`,
+      sourceIp: selectedUser.assignedDeviceIp,
       timestamp: "Just now",
       severity: "INFO",
       status: "SUCCESS",
       riskScore: selectedUser.role === "manager" ? 0 : 5,
-      details: "Authenticated via Enterprise Identity Provider with Multi-Factor Clearance."
+      details: `Zero-trust device authentication confirmed for ${selectedUser.name} on ${selectedUser.assignedDeviceId}.`
     };
 
     setAuditRecords(prev => {
@@ -339,13 +423,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const switchRole = useCallback((role: UserRole) => {
-    const newUser = role === "manager" ? { ...DEMO_MANAGER } : { ...DEMO_EMPLOYEE };
-    newUser.lastLogin = "Just now";
-    setUser(newUser);
-    try {
-      localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
-    } catch {}
-  }, []);
+    if (role === "manager") {
+      switchUserPersona("manager");
+    } else {
+      switchUserPersona("david");
+    }
+  }, [switchUserPersona]);
 
   const recordAction = useCallback((
     action: string,
@@ -364,7 +447,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       department: user.department,
       action,
       targetResource,
-      sourceIp: "10.0.4.12",
+      sourceIp: user.assignedDeviceIp || "10.0.4.12",
       timestamp: "Just now",
       severity,
       status: "SUCCESS",
@@ -392,13 +475,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return updated;
     });
 
-    // Record revocation in audit log
     if (user) {
       recordAction(
-        `Session Revoked & Clearance Suspended`,
+        `Session Revoked & Device Quarantined`,
         `Personnel: ${employeeId}`,
         "CRITICAL",
-        `Manager ${user.name} initiated emergency credential revocation.`
+        `Manager ${user.name} initiated emergency device attestation revocation.`
       );
     }
   }, [user, recordAction]);
@@ -414,9 +496,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated,
         isManager,
         isEmployee,
+        currentSector,
+        setSector,
         login,
         logout,
         switchRole,
+        switchUserPersona,
         auditRecords,
         employeeProfiles,
         recordAction,
@@ -435,4 +520,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
