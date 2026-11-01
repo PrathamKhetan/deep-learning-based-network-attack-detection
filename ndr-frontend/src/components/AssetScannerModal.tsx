@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { NetworkNode, BlastRadiusResult } from "@/types/telemetry";
 import { telemetryClient } from "@/lib/telemetryClient";
 import { Shield, Server, Router, Radio, AlertTriangle, Lock, Unlock, Search, X, Check, Flame } from "lucide-react";
+import { useAuth } from "@/lib/authContext";
 
 interface Props {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export const AssetScannerModal: React.FC<Props> = ({ isOpen, onClose, onSelectNodeInTopology }) => {
+  const { recordAction } = useAuth();
   const [assets, setAssets] = useState<any[]>([]);
   const [selectedAsset, setSelectedAsset] = useState<any | null>(null);
   const [blastRadius, setBlastRadius] = useState<BlastRadiusResult | null>(null);
@@ -42,6 +44,12 @@ export const AssetScannerModal: React.FC<Props> = ({ isOpen, onClose, onSelectNo
 
   const handleIsolateToggle = async (nodeId: string, currentIsolated: boolean) => {
     await telemetryClient.remediateNode(nodeId, !currentIsolated);
+    recordAction(
+      currentIsolated ? "Restored Network Node" : "Quarantined / Isolated Node",
+      `Node: ${nodeId}`,
+      currentIsolated ? "INFO" : "CRITICAL",
+      `Applied zero-trust topology microsegmentation to ${nodeId}.`
+    );
     // Reload updated asset list
     await loadAssets();
     if (selectedAsset?.id === nodeId) {

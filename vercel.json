@@ -2,15 +2,21 @@
   "version": 2,
   "builds": [
     {
-      "src": "ndr-frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "dist" }
+      "src": "ndr-frontend/next.config.js",
+      "use": "@vercel/next"
     }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "https://dashboard.render.com/web/srv-dbe5shoae00c73eqed8g/api/v1/$1" }
+    {
+      "src": "/api/(.*)",
+      "dest": "https://dashboard.render.com/web/srv-dbe5shoae00c73eqed8g/api/v1/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "ndr-frontend/$1"
+    }
   ],
   "env": {
-    "VITE_BACKEND_URL": "https://dashboard.render.com/web/srv-dbe5shoae00c73eqed8g"
+    "NEXT_PUBLIC_BACKEND_URL": "https://dashboard.render.com/web/srv-dbe5shoae00c73eqed8g"
   }
 }

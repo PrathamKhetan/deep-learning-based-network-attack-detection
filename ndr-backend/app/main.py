@@ -9,6 +9,7 @@ import logging
 from app.config import settings
 from app.database import init_db
 from app.api.routes import router as api_router
+from app.api.auth import router as auth_router
 from app.api.websocket import manager
 
 logging.basicConfig(
@@ -44,6 +45,7 @@ app.add_middleware(
 
 # Mount REST endpoints
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 
 @app.get("/")
 def root():

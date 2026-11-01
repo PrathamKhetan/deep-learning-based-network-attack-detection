@@ -4,6 +4,7 @@ import React from "react";
 import { AttackType, TelemetryBurst } from "@/types/telemetry";
 import { Zap, Radio, Globe, ShieldOff, Play, Square, AlertOctagon } from "lucide-react";
 import { telemetryClient } from "@/lib/telemetryClient";
+import { useAuth } from "@/lib/authContext";
 
 interface Props {
   telemetry: TelemetryBurst | null;
@@ -54,18 +55,38 @@ const ATTACK_OPTIONS: AttackOption[] = [
 ];
 
 export const AttackControlsDock: React.FC<Props> = ({ telemetry }) => {
+  const { recordAction } = useAuth();
   const activeAttack = telemetry?.active_attack || null;
 
   const handleToggle = (type: AttackType) => {
+    const opt = ATTACK_OPTIONS.find(o => o.type === type);
     if (activeAttack === type) {
       telemetryClient.triggerAttack(null);
+      recordAction(
+        "Disarmed Attack Simulation",
+        opt?.title || type,
+        "INFO",
+        "Personnel cleared active threat simulation sandbox."
+      );
     } else {
       telemetryClient.triggerAttack(type);
+      recordAction(
+        "Triggered Adversary Simulation",
+        `${opt?.title || type} [${opt?.category}]`,
+        "CRITICAL",
+        `Authorized synthetic adversary stress test against Tabular DNN & GNN mesh.`
+      );
     }
   };
 
   const handleDisarm = () => {
     telemetryClient.triggerAttack(null);
+    recordAction(
+      "Emergency Attack Disarm",
+      "ALL_ACTIVE_VECTORS",
+      "WARN",
+      "Disarmed all active attack injections via master emergency stop."
+    );
   };
 
   return (
