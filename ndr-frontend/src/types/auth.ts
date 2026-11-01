@@ -1,8 +1,13 @@
 import { SectorScope } from "./telemetry";
 
-export type UserRole = "manager" | "employee";
+export type UserRole = "ceo" | "manager" | "team_lead" | "threat_hunter" | "employee";
 
-export type ClearanceLevel = "LEVEL_4_EXECUTIVE" | "LEVEL_2_OPERATOR";
+export type ClearanceLevel = 
+  | "LEVEL_5_SOVEREIGN" 
+  | "LEVEL_4_EXECUTIVE" 
+  | "LEVEL_3_OPERATIONS_LEAD" 
+  | "LEVEL_2_SPECIALIST" 
+  | "LEVEL_1_OPERATOR";
 
 export interface AuthUser {
   id: string;
@@ -13,7 +18,9 @@ export interface AuthUser {
   department: string;
   title: string;
   employeeId: string;
-  avatar?: string;
+  avatar: string;
+  avatarGradient: string;
+  badgeBorder: string;
   shift: string;
   activeSessionId: string;
   lastLogin: string;
@@ -21,6 +28,7 @@ export interface AuthUser {
   assignedSector: SectorScope;
   assignedDeviceId: string;
   assignedDeviceIp: string;
+  quote?: string;
 }
 
 export type ActionSeverity = "CRITICAL" | "WARN" | "INFO";
@@ -57,4 +65,16 @@ export interface EmployeeProfile {
   lastActive: string;
   assignedWorkstation: string;
   assignedSector: SectorScope;
+  avatar: string;
+  avatarGradient: string;
+}
+
+export interface ExecutiveBriefing {
+  quarterlyBudgetProtected: string;
+  complianceRating: string;
+  activeEnterpriseVulnerabilities: number;
+  executiveActionRequired: boolean;
+  corporateRiskIndex: number;
+  boardReportDate: string;
+  crisisModeActive: boolean;
 }

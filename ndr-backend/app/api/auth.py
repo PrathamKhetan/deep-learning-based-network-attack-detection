@@ -32,8 +32,9 @@ class TokenResponse(BaseModel):
 
 @router.post("/register", status_code=201)
 async def register(req: RegisterRequest):
-    if req.role not in {"admin", "employee", "boss", "manager"}:
-        raise HTTPException(status_code=400, detail="role must be admin, employee, boss, or manager")
+    valid_roles = {"admin", "employee", "boss", "manager", "ceo", "team_lead", "threat_hunter"}
+    if req.role not in valid_roles:
+        raise HTTPException(status_code=400, detail=f"role must be one of {valid_roles}")
     from ..database_mongo import get_user
     try:
         if await get_user(req.email):
@@ -53,9 +54,9 @@ async def register(req: RegisterRequest):
 async def login(req: LoginRequest):
     user = await authenticate_user(req.email, req.password)
     if not user:
-        # If demo credentials or requested role
-        if req.email.endswith("@aegis-defense.corp") or "manager" in req.email:
-            role = "manager" if ("manager" in req.email or req.role == "manager") else "employee"
+        if req.email.endswith("@aegis-defense.corp"):
+            lower = req.email.lower()
+            role = "ceo" if "ceo" in lower else "manager" if "manager" in lower else "team_lead" if "lead" in lower else "threat_hunter" if "hunter" in lower else "employee"
             token = create_access_token({"sub": req.email, "role": role})
             return {"access_token": token, "token_type": "bearer", "role": role, "email": req.email}
         raise HTTPException(status_code=401, detail="Invalid corporate credentials")
@@ -68,61 +69,62 @@ async def get_my_profile(current_user: UserInDB = Depends(get_current_user)):
     return {
         "email": current_user.email,
         "role": current_user.role,
+        "is_ceo": current_user.role == "ceo",
         "is_manager": current_user.role in {"manager", "boss", "admin"},
-        "clearance": "LEVEL_4_EXECUTIVE" if current_user.role in {"manager", "boss", "admin"} else "LEVEL_2_OPERATOR"
+        "is_team_lead": current_user.role == "team_lead",
+        "clearance": "LEVEL_5_SOVEREIGN" if current_user.role == "ceo" else "LEVEL_4_EXECUTIVE" if current_user.role in {"manager", "boss", "admin"} else "LEVEL_3_OPERATIONS_LEAD" if current_user.role == "team_lead" else "LEVEL_1_OPERATOR"
     }
 
 @router.get("/employee-history")
 async def get_backend_employee_history(current_user: UserInDB = Depends(get_current_user)):
     """
     CRITICAL ROLE-BASED ACCESS CONTROL ENDPOINT:
-    Managers are able to see employee history, but vice versa is strictly NOT possible (HTTP 403 Forbidden).
+    CEOs, Managers, and Team Leads can see employee history, but normal employees are strictly NOT permitted (HTTP 403 Forbidden).
     """
-    if current_user.role not in {"manager", "boss", "admin"}:
+    if current_user.role not in {"ceo", "manager", "boss", "admin", "team_lead"}:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="CLEARANCE VIOLATION (HTTP 403): Employee accounts are strictly prohibited from viewing peer or personnel audit logs. Manager clearance required."
+            detail="CLEARANCE VIOLATION (HTTP 403): Employee accounts are strictly prohibited from viewing peer or personnel audit logs. Supervisory clearance required."
         )
 
-    # Return authoritative employee audit history
     return [
+        {
+            "id": "AUD-9025",
+            "employeeId": "CORP-EXEC-0001",
+            "employeeName": "Victoria Sterling",
+            "role": "ceo",
+            "action": "Approved Crisis Mode Contingency Budget",
+            "targetResource": "FINANCIAL_RISK_POOL [$12.5M]",
+            "sourceIp": "10.0.0.1",
+            "timestamp": "8 mins ago",
+            "severity": "INFO",
+            "status": "SUCCESS",
+            "riskScore": 0
+        },
+        {
+            "id": "AUD-9024",
+            "employeeId": "CORP-MGR-0091",
+            "employeeName": "Cmdr. Sarah Jenkins",
+            "role": "manager",
+            "action": "Authorized Zero-Trust Perimeter Micro-Isolation",
+            "targetResource": "BGP-OPTICAL-CORE [10.0.1.1]",
+            "sourceIp": "10.0.0.99",
+            "timestamp": "14 mins ago",
+            "severity": "CRITICAL",
+            "status": "SUCCESS",
+            "riskScore": 12
+        },
         {
             "id": "AUD-9021",
             "employeeId": "CORP-EMP-4420",
             "employeeName": "David Vance",
             "role": "employee",
-            "action": "Remediated Network Node (Isolate)",
-            "targetResource": "CORE-SWITCH-01 [10.0.1.1]",
+            "action": "Quarantined DMZ WAF Route",
+            "targetResource": "node-dmz-waf [10.0.4.1]",
             "sourceIp": "10.0.4.12",
-            "timestamp": "10 mins ago",
+            "timestamp": "45 mins ago",
             "severity": "CRITICAL",
             "status": "SUCCESS",
             "riskScore": 35
-        },
-        {
-            "id": "AUD-9020",
-            "employeeId": "CORP-EMP-5102",
-            "employeeName": "Marcus Chen",
-            "role": "employee",
-            "action": "Failed Sudo Privilege Elevation",
-            "targetResource": "PROBE-SOC-GATEWAY [10.0.3.50]",
-            "sourceIp": "10.0.4.29",
-            "timestamp": "18 mins ago",
-            "severity": "WARN",
-            "status": "FLAGGED",
-            "riskScore": 78
-        },
-        {
-            "id": "AUD-9019",
-            "employeeId": "CORP-EMP-3918",
-            "employeeName": "Elena Rostova",
-            "role": "employee",
-            "action": "Triggered Attack Vector Simulation",
-            "targetResource": "SIM-ENGINE [DDoS SYN Flood]",
-            "sourceIp": "10.0.4.18",
-            "timestamp": "32 mins ago",
-            "severity": "INFO",
-            "status": "SUCCESS",
-            "riskScore": 15
         }
     ]

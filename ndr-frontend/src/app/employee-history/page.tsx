@@ -24,7 +24,8 @@ import {
   Activity,
   Zap,
   SlidersHorizontal,
-  ChevronRight
+  ChevronRight,
+  Crown
 } from "lucide-react";
 import { useAuth } from "@/lib/authContext";
 import { ActionSeverity, ActionStatus } from "@/types/auth";
@@ -33,11 +34,14 @@ export default function EmployeeHistoryPage() {
   const router = useRouter();
   const {
     user,
+    isCeo,
     isManager,
+    isTeamLead,
     isEmployee,
+    canViewAllAuditLogs,
     auditRecords,
     employeeProfiles,
-    switchRole,
+    switchUserPersona,
     recordAction,
     revokeEmployeeSession
   } = useAuth();
@@ -47,6 +51,8 @@ export default function EmployeeHistoryPage() {
   const [selectedSeverity, setSelectedSeverity] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
+
+  const hasAccess = isCeo || isManager || isTeamLead;
 
   // Filtered audit records
   const filteredRecords = useMemo(() => {
@@ -126,119 +132,104 @@ export default function EmployeeHistoryPage() {
   };
 
   /* =================================================================================
-     CASE 1: ACCESS DENIED (WHEN LOGGED IN AS EMPLOYEE)
+     CASE 1: ACCESS DENIED (WHEN LOGGED IN AS NORMAL EMPLOYEE OR OPERATOR)
      VICE VERSA NOT POSSIBLE - EMPLOYEES CANNOT VIEW EMPLOYEE HISTORY
      ================================================================================= */
-  if (isEmployee || !isManager) {
+  if (!hasAccess) {
     return (
-      <div className="min-h-screen bg-cyber-bg flex flex-col justify-center items-center px-4 py-8 relative">
-        <div className="absolute w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none bg-cyber-red/15 top-1/4" />
+      <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 relative">
+        {/* Background Ambience */}
+        <div className="absolute w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none bg-rose-500/15 top-1/4" />
 
         {/* Corporate Breadcrumb */}
         <div className="relative z-10 w-full max-w-2xl mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-mono text-slate-400 hover:text-cyber-cyan transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white transition-colors"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Return to SOC Command Dashboard</span>
+            <ArrowLeft className="w-4 h-4" />
+            <span>Return to Operations Command Center</span>
           </Link>
         </div>
 
         {/* 403 Forbidden Security Barrier Card */}
-        <div className="relative z-10 w-full max-w-2xl cyber-panel-red rounded-xl overflow-hidden border border-cyber-red/60 shadow-2xl">
+        <div className="relative z-10 w-full max-w-2xl modular-card p-6 border-rose-500/40 bg-gradient-to-br from-slate-900 via-rose-950/20 to-slate-950 shadow-2xl rounded-2xl space-y-5">
           {/* Header Bar */}
-          <div className="bg-black/80 px-6 py-4 border-b border-cyber-red/40 flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-rose-500/30 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-cyber-red/20 border border-cyber-red flex items-center justify-center text-cyber-red shadow-neon-red">
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-400 text-rose-400 flex items-center justify-center shadow-lg shadow-rose-500/20">
                 <ShieldAlert className="w-6 h-6 animate-pulse" />
               </div>
               <div>
-                <h1 className="text-lg font-black tracking-wider text-cyber-red uppercase flex items-center gap-2">
-                  <span>SECURITY VIOLATION &bull; HTTP 403 FORBIDDEN</span>
+                <h1 className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                  <span>CLEARANCE RESTRICTION &bull; HTTP 403 FORBIDDEN</span>
                 </h1>
-                <p className="text-xs text-slate-400 font-mono">
-                  Corporate Zero-Trust Access Gateway &bull; Policy Enforcement Rule SEC-802
+                <p className="text-xs text-rose-300 font-medium">
+                  Corporate Zero-Trust Access Policy &bull; Rule SEC-OP-403 Enforcement
                 </p>
               </div>
             </div>
-            <span className="px-3 py-1 rounded bg-cyber-red/20 border border-cyber-red text-cyber-red text-xs font-mono font-bold animate-pulse">
-              RESTRICTED
+            <span className="px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400 text-rose-300 text-xs font-bold">
+              ACCESS BLOCKED
             </span>
           </div>
 
-          {/* Core Access Barrier Explanation */}
-          <div className="p-6 space-y-5 font-mono text-xs">
-            <div className="p-4 rounded-lg bg-black/60 border border-cyber-red/30 space-y-2">
-              <div className="text-slate-200 font-bold uppercase tracking-wider text-sm flex items-center gap-2 text-cyber-red">
-                <Lock className="w-4 h-4 text-cyber-red" />
-                <span>Personnel Operational History Is Restricted to Managers</span>
-              </div>
-              <p className="text-slate-300 leading-relaxed text-xs">
-                You are currently authenticated as an <strong>Employee (Level 2 Operator)</strong>. Under Aegis
-                Corporate Security Policy <strong>SEC-OP-403</strong>, employee accounts are strictly prohibited from
-                viewing personnel audit logs, peer employee histories, or managerial oversight data.
-              </p>
+          {/* Explanation */}
+          <div className="p-4 rounded-xl bg-black/50 border border-rose-500/20 space-y-2 text-xs leading-relaxed text-slate-300">
+            <div className="text-white font-bold flex items-center gap-2 text-sm text-rose-300">
+              <Lock className="w-4 h-4 text-rose-400" />
+              <span>Personnel History & Supervisory Logs Are Restricted</span>
             </div>
+            <p>
+              You are currently authenticated as <strong>{user?.name} ({user?.title})</strong> with clearance level{" "}
+              <strong>{user?.clearanceLevel}</strong>. Under Corporate Compliance Rule <strong>SEC-OP-403</strong>,
+              employees and specialist operators are prohibited from viewing cross-employee histories, peer activity
+              logs, or supervisory oversight data.
+            </p>
+          </div>
 
-            {/* Clearance Comparison Matrix */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div className="p-3.5 rounded-lg bg-slate-900/80 border border-slate-700">
-                <div className="text-slate-400 text-[10px] uppercase font-bold mb-1">Your Identity & Clearance</div>
-                <div className="text-white font-bold text-sm">{user?.name || "David Vance"}</div>
-                <div className="text-cyber-purple font-mono text-xs mt-0.5">Role: {user?.role?.toUpperCase()}</div>
-                <div className="text-slate-400 text-[11px] mt-1">Clearance: LEVEL_2_OPERATOR</div>
-                <div className="mt-2 text-cyber-red flex items-center gap-1.5 text-[11px] font-semibold">
-                  <XCircle className="w-3.5 h-3.5" />
-                  <span>Access to Employee History: DENIED</span>
-                </div>
-              </div>
-
-              <div className="p-3.5 rounded-lg bg-slate-900/80 border border-cyber-cyan/40">
-                <div className="text-cyber-cyan text-[10px] uppercase font-bold mb-1">Required Clearance</div>
-                <div className="text-white font-bold text-sm">Manager / SOC Commander</div>
-                <div className="text-cyber-cyan font-mono text-xs mt-0.5">Role: MANAGER</div>
-                <div className="text-slate-400 text-[11px] mt-1">Clearance: LEVEL_4_EXECUTIVE</div>
-                <div className="mt-2 text-cyber-emerald flex items-center gap-1.5 text-[11px] font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Full Personnel History: AUTHORIZED</span>
-                </div>
+          {/* Clearance Matrix */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-700">
+              <div className="text-slate-400 text-[10px] uppercase font-bold mb-1">Your Identity & Clearance</div>
+              <div className="text-white font-bold text-sm">{user?.name}</div>
+              <div className="text-sky-300 font-semibold text-xs mt-0.5">Role: {user?.role?.toUpperCase()}</div>
+              <div className="text-slate-400 text-[11px] mt-1">{user?.clearanceLevel}</div>
+              <div className="mt-2 text-rose-400 flex items-center gap-1.5 text-[11px] font-bold">
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Personnel History: ACCESS DENIED</span>
               </div>
             </div>
 
-            {/* Compliance Policy Note */}
-            <div className="p-3 bg-black/40 rounded border border-slate-800 text-[11px] text-slate-400 space-y-1">
-              <div className="font-bold text-slate-300">Why is vice-versa not possible?</div>
-              <p>
-                In corporate cyber defense operations, managers possess supervisory oversight over team actions to detect
-                insider threats and audit remediation workflows. Tier 1/2 employees are compartmentalized to personal
-                workstation telemetry to prevent unauthorized lateral surveillance between peer analysts.
-              </p>
-            </div>
-
-            {/* Action Buttons for Easy Testing on Vercel */}
-            <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
-              <button
-                onClick={() => switchRole("manager")}
-                className="w-full sm:w-auto flex-1 py-3 px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-cyber-cyan/20 hover:bg-cyber-cyan/30 border border-cyber-cyan text-cyber-cyan shadow-neon-cyan transition-all"
-              >
-                <Unlock className="w-4 h-4 text-cyber-cyan" />
-                <span>Switch to Manager Role (Test Unlocked View)</span>
-              </button>
-
-              <Link
-                href="/"
-                className="w-full sm:w-auto py-3 px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all text-center"
-              >
-                <span>Return to Command Center</span>
-              </Link>
+            <div className="p-3.5 rounded-xl bg-slate-900/80 border border-amber-400/40">
+              <div className="text-amber-400 text-[10px] uppercase font-bold mb-1">Required Clearance</div>
+              <div className="text-white font-bold text-sm">CEO / Manager / Team Lead</div>
+              <div className="text-amber-300 font-semibold text-xs mt-0.5">Clearance: TIER 3 - TIER 5</div>
+              <div className="text-slate-400 text-[11px] mt-1">Supervisory Personnel Clearance</div>
+              <div className="mt-2 text-emerald-400 flex items-center gap-1.5 text-[11px] font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Personnel Audit: AUTHORIZED</span>
+              </div>
             </div>
           </div>
 
-          {/* Footer Warning */}
-          <div className="bg-black/90 px-6 py-2.5 border-t border-cyber-red/30 text-[10px] font-mono text-slate-500 flex items-center justify-between">
-            <span>AUDIT EVENT LOGGED: SEC_FORBIDDEN_ATTEMPT</span>
-            <span>INCIDENT ID: #SEC-403-{Date.now().toString().slice(-6)}</span>
+          {/* Quick Demo Switchers */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+            <button
+              onClick={() => switchUserPersona("ceo")}
+              className="w-full sm:w-auto flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-lg shadow-amber-500/20 hover:scale-105 transition-all"
+            >
+              <Crown className="w-4 h-4" />
+              <span>Switch to CEO (Victoria Sterling)</span>
+            </button>
+
+            <button
+              onClick={() => switchUserPersona("manager")}
+              className="w-full sm:w-auto flex-1 py-3 px-4 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20 hover:scale-105 transition-all"
+            >
+              <Unlock className="w-4 h-4" />
+              <span>Switch to Manager (Cmdr. Jenkins)</span>
+            </button>
           </div>
         </div>
       </div>
@@ -246,417 +237,204 @@ export default function EmployeeHistoryPage() {
   }
 
   /* =================================================================================
-     CASE 2: ACCESS GRANTED (WHEN LOGGED IN AS MANAGER)
-     MANAGERS ARE ABLE TO SEE ALL EMPLOYEE HISTORY & AUDIT LOGS
+     CASE 2: ACCESS GRANTED (CEO, MANAGER, TEAM LEAD)
      ================================================================================= */
   return (
-    <div className="min-h-screen bg-cyber-bg text-slate-100 flex flex-col">
-      {/* Top Corporate Command Bar */}
-      <header className="relative w-full cyber-panel border-b border-cyber-border px-4 py-3 z-30">
-        <div className="max-w-[1920px] mx-auto flex flex-wrap items-center justify-between gap-4 font-mono">
-          {/* Left: Branding & Page Title */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/"
-              className="p-2 rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-cyber-cyan border border-slate-700 transition-all"
-              title="Return to SOC Command Dashboard"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
+    <div className="min-h-screen text-slate-100 flex flex-col p-4 md:p-6 max-w-[1920px] mx-auto w-full space-y-4">
+      {/* Top Header */}
+      <div className="modular-card p-5 border border-white/10 bg-slate-900/80 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <Link
+            href="/"
+            className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs px-2 py-0.5 rounded bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan font-bold">
-                  EXECUTIVE AUDIT SUITE
-                </span>
-                <h1 className="text-sm md:text-base font-bold text-white uppercase tracking-wider">
-                  EMPLOYEE OPERATIONAL HISTORY & AUDIT TRAIL
-                </h1>
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Aegis Cyber Defense Systems &bull; Level 4 Supervisory Oversight & Compliance
-              </p>
-            </div>
-          </div>
-
-          {/* Center: Clearance Stamp */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1 rounded-md bg-cyber-emerald/10 border border-cyber-emerald/30 text-cyber-emerald text-xs">
-            <ShieldCheck className="w-4 h-4 text-cyber-emerald" />
-            <span>MANAGER CLEARANCE VERIFIED &bull; FULL PERSONNEL AUDIT ACCESS GRANTED</span>
-          </div>
-
-          {/* Right: Quick Switcher / Export Controls */}
-          <div className="flex items-center gap-3 text-xs">
-            <button
-              onClick={handleSimulateLiveAction}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-cyber-cyan/15 hover:bg-cyber-cyan/25 border border-cyber-cyan/40 text-cyber-cyan transition-all"
-              title="Add a simulated live employee action to the audit trail"
-            >
-              <Zap className="w-3.5 h-3.5 text-cyber-amber" />
-              <span>Simulate Employee Action</span>
-            </button>
-
-            <button
-              onClick={handleExportAuditReport}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-400 transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export SOC 2 Report</span>
-            </button>
-
-            {/* Quick Demo Switcher to Employee Role */}
-            <button
-              onClick={() => switchRole("employee")}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-cyber-purple/20 hover:bg-cyber-purple/30 border border-cyber-purple/40 text-purple-200 transition-all text-[11px]"
-              title="Test the 403 Forbidden lockout by switching to Employee role"
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>Test Employee View (Blocked)</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-[1920px] w-full mx-auto p-4 md:p-6 flex flex-col gap-5 font-mono">
-        {/* Banner Notification if an action occurred */}
-        {actionSuccessMsg && (
-          <div className="p-3 rounded-lg bg-cyber-emerald/15 border border-cyber-emerald/50 text-cyber-emerald text-xs flex items-center justify-between animate-fadeIn">
+          <div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>{actionSuccessMsg}</span>
+              <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-bold uppercase tracking-wider">
+                SUPERVISORY CLEARANCE VERIFIED
+              </span>
+              <h1 className="text-lg font-black text-white">
+                Personnel Directory & Operational Action History
+              </h1>
             </div>
-            <button onClick={() => setActionSuccessMsg(null)} className="text-slate-400 hover:text-white">
-              ✕
-            </button>
-          </div>
-        )}
-
-        {/* 1. Top Tier: Supervisory KPI Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <div className="cyber-panel p-4 rounded-xl border border-cyber-border">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>MONITORED PERSONNEL</span>
-              <Users className="w-4 h-4 text-cyber-cyan" />
-            </div>
-            <div className="text-2xl font-bold text-white tracking-tight">
-              {employeeProfiles.length} <span className="text-xs text-cyber-emerald font-normal">Active</span>
-            </div>
-            <div className="text-[11px] text-slate-400 mt-1">Tier 1 & Tier 2 SOC Operators</div>
-          </div>
-
-          <div className="cyber-panel p-4 rounded-xl border border-cyber-border">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>LOGGED SHIFT ACTIONS</span>
-              <Activity className="w-4 h-4 text-cyber-emerald" />
-            </div>
-            <div className="text-2xl font-bold text-cyber-emerald tracking-tight">
-              {auditRecords.length}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-1">100% Attributed with Source IP</div>
-          </div>
-
-          <div className="cyber-panel p-4 rounded-xl border border-cyber-border">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>FLAGGED / CRITICAL EVENTS</span>
-              <AlertTriangle className="w-4 h-4 text-cyber-red" />
-            </div>
-            <div className="text-2xl font-bold text-cyber-red tracking-tight">
-              {auditRecords.filter((r) => r.severity === "CRITICAL" || r.status === "FLAGGED").length}
-            </div>
-            <div className="text-[11px] text-slate-400 mt-1">Requires Managerial Sign-Off</div>
-          </div>
-
-          <div className="cyber-panel p-4 rounded-xl border border-cyber-border">
-            <div className="flex items-center justify-between text-slate-400 text-xs mb-1">
-              <span>COMPLIANCE STATUS</span>
-              <ShieldCheck className="w-4 h-4 text-cyber-cyan" />
-            </div>
-            <div className="text-2xl font-bold text-cyber-cyan tracking-tight">SOC 2 / ISO</div>
-            <div className="text-[11px] text-slate-400 mt-1">Continuous Audit Hash: Valid</div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Aegis Corporate Governance &bull; Attributed Device Operations & Action Audits
+            </p>
           </div>
         </div>
 
-        {/* 2. Middle Tier: Personnel Directory & Status Overview */}
-        <div className="cyber-panel p-4 rounded-xl border border-cyber-border">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-cyber-cyan" />
-              <h2 className="text-xs font-bold text-white uppercase tracking-wider">
-                ACTIVE SOC PERSONNEL DIRECTORY
-              </h2>
-            </div>
-            <span className="text-[11px] text-slate-400">Click personnel card to filter action history</span>
+        <div className="flex items-center gap-3 text-xs">
+          <button
+            onClick={handleSimulateLiveAction}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 font-semibold transition-all"
+          >
+            <Zap className="w-3.5 h-3.5 text-amber-300" />
+            <span>Simulate Employee Action</span>
+          </button>
+
+          <button
+            onClick={handleExportAuditReport}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-400/40 text-emerald-200 font-semibold transition-all"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-300" />
+            <span>Export SOC 2 JSON</span>
+          </button>
+        </div>
+      </div>
+
+      {actionSuccessMsg && (
+        <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs flex items-center justify-between">
+          <div className="flex items-center gap-2 font-bold">
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{actionSuccessMsg}</span>
           </div>
+          <button onClick={() => setActionSuccessMsg(null)}>✕</button>
+        </div>
+      )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {employeeProfiles.map((emp) => {
-              const isSelected = selectedEmployee === emp.employeeId;
-              const isSuspended = emp.status === "SUSPENDED";
+      {/* Directory Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {employeeProfiles.map((emp) => {
+          const isSelected = selectedEmployee === emp.employeeId;
+          const isSuspended = emp.status === "SUSPENDED";
 
-              return (
-                <div
-                  key={emp.employeeId}
-                  onClick={() => setSelectedEmployee(isSelected ? "ALL" : emp.employeeId)}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    isSelected
-                      ? "bg-cyber-cyan/15 border-cyber-cyan shadow-neon-cyan"
-                      : "bg-black/40 border-slate-800 hover:border-slate-700"
-                  } ${isSuspended ? "opacity-60 border-cyber-red/50" : ""}`}
+          return (
+            <div
+              key={emp.employeeId}
+              onClick={() => setSelectedEmployee(isSelected ? "ALL" : emp.employeeId)}
+              className={`modular-card p-4 border cursor-pointer transition-all duration-200 ${
+                isSelected
+                  ? "border-indigo-400 shadow-lg shadow-indigo-500/30 scale-[1.02] bg-indigo-950/40"
+                  : "border-white/10 hover:border-white/20 bg-slate-900/60"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-lg">{emp.avatar}</span>
+                <span
+                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${
+                    isSuspended
+                      ? "bg-rose-500/20 text-rose-300"
+                      : emp.status === "ONLINE"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-slate-800 text-slate-300"
+                  }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[10px] text-slate-400">{emp.employeeId}</span>
+                  {emp.status}
+                </span>
+              </div>
+
+              <div className="font-bold text-white text-sm truncate">{emp.name}</div>
+              <div className="text-[11px] text-slate-400 truncate">{emp.title}</div>
+              <div className="text-[10px] text-indigo-300 mt-1">{emp.department}</div>
+
+              <div className="mt-3 pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                <span className="text-slate-400">Risk Score:</span>
+                <span className={`font-bold ${emp.riskScore > 50 ? "text-rose-400" : "text-emerald-400"}`}>
+                  {emp.riskScore}/100
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Table of Audit Records */}
+      <div className="modular-card rounded-2xl border border-white/10 bg-slate-900/70 overflow-hidden space-y-3">
+        {/* Filter bar */}
+        <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex-1 min-w-[240px] relative">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Filter actions by keyword, resource, or employee..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-950/80 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-400"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedEmployee}
+              onChange={(e) => setSelectedEmployee(e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none"
+            >
+              <option value="ALL">All Employees</option>
+              {employeeProfiles.map((e) => (
+                <option key={e.employeeId} value={e.employeeId}>
+                  {e.name}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedSeverity}
+              onChange={(e) => setSelectedSeverity(e.target.value)}
+              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none"
+            >
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical</option>
+              <option value="WARN">Warning</option>
+              <option value="INFO">Info</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Records Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-950/60 text-slate-400 uppercase text-[10px] tracking-wider border-b border-white/10">
+              <tr>
+                <th className="py-3 px-4">Event ID / Time</th>
+                <th className="py-3 px-4">Employee</th>
+                <th className="py-3 px-4">Action Performed</th>
+                <th className="py-3 px-4">Target Resource</th>
+                <th className="py-3 px-4">Source IP</th>
+                <th className="py-3 px-4">Severity</th>
+                <th className="py-3 px-4">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {filteredRecords.map((r) => (
+                <tr key={r.id} className="hover:bg-white/5 transition-colors">
+                  <td className="py-3 px-4">
+                    <div className="font-bold text-indigo-300">{r.id}</div>
+                    <div className="text-[10px] text-slate-400">{r.timestamp}</div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <div className="font-semibold text-white">{r.employeeName}</div>
+                    <div className="text-[10px] text-slate-400">{r.department}</div>
+                  </td>
+                  <td className="py-3 px-4 font-medium text-slate-200">{r.action}</td>
+                  <td className="py-3 px-4">
+                    <span className="px-2 py-0.5 rounded bg-black/40 border border-slate-700 text-slate-300">
+                      {r.targetResource}
+                    </span>
+                  </td>
+                  <td className="py-3 px-4 text-slate-400">{r.sourceIp}</td>
+                  <td className="py-3 px-4">
                     <span
-                      className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
-                        isSuspended
-                          ? "bg-cyber-red/20 text-cyber-red border border-cyber-red"
-                          : emp.status === "ONLINE"
-                          ? "bg-cyber-emerald/20 text-cyber-emerald"
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        r.severity === "CRITICAL"
+                          ? "bg-rose-500/20 text-rose-300"
+                          : r.severity === "WARN"
+                          ? "bg-amber-500/20 text-amber-300"
                           : "bg-slate-800 text-slate-300"
                       }`}
                     >
-                      {emp.status}
+                      {r.severity}
                     </span>
-                  </div>
-
-                  <div className="font-bold text-white text-xs truncate">{emp.name}</div>
-                  <div className="text-[10px] text-slate-400 truncate mt-0.5">{emp.title}</div>
-
-                  <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
-                    <span className="text-slate-400">Risk Score:</span>
-                    <span
-                      className={`font-bold ${
-                        emp.riskScore > 50
-                          ? "text-cyber-red"
-                          : emp.riskScore > 20
-                          ? "text-cyber-amber"
-                          : "text-cyber-emerald"
-                      }`}
-                    >
-                      {emp.riskScore}/100
-                    </span>
-                  </div>
-
-                  {/* Manager Session Revocation Action */}
-                  <div className="mt-2 flex items-center justify-between gap-1">
-                    <span className="text-[9px] text-slate-500 truncate">{emp.assignedWorkstation}</span>
-                    {!isSuspended && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(`Revoke active token and suspend clearance for ${emp.name}?`)) {
-                            revokeEmployeeSession(emp.employeeId);
-                          }
-                        }}
-                        className="text-[9px] px-1.5 py-0.5 rounded bg-cyber-red/15 hover:bg-cyber-red/30 border border-cyber-red/40 text-cyber-red shrink-0"
-                        title="Revoke active employee session token"
-                      >
-                        Revoke
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* 3. Lower Tier: Action History Log with Search & Filter Controls */}
-        <div className="cyber-panel rounded-xl border border-cyber-border overflow-hidden flex flex-col">
-          {/* Filter Bar */}
-          <div className="p-4 bg-black/60 border-b border-cyber-border flex flex-wrap items-center justify-between gap-3 text-xs">
-            {/* Search Input */}
-            <div className="relative flex-1 min-w-[240px]">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search by action, target resource, employee name, or IP..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 focus:border-cyber-cyan rounded-lg pl-9 pr-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none"
-              />
-            </div>
-
-            {/* Filter Selectors */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Filter by Employee */}
-              <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-300">
-                <Users className="w-3.5 h-3.5 text-cyber-cyan" />
-                <select
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                  className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="ALL">All Employees ({auditRecords.length})</option>
-                  {employeeProfiles.map((emp) => (
-                    <option key={emp.employeeId} value={emp.employeeId}>
-                      {emp.name} ({emp.employeeId})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Filter by Severity */}
-              <div className="flex items-center gap-1.5 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-slate-300">
-                <Filter className="w-3.5 h-3.5 text-cyber-cyan" />
-                <select
-                  value={selectedSeverity}
-                  onChange={(e) => setSelectedSeverity(e.target.value)}
-                  className="bg-transparent text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="ALL">All Severities</option>
-                  <option value="CRITICAL">Critical Only</option>
-                  <option value="WARN">Warning Only</option>
-                  <option value="INFO">Info Only</option>
-                </select>
-              </div>
-
-              {/* Reset Filters */}
-              {(selectedEmployee !== "ALL" || selectedSeverity !== "ALL" || searchQuery) && (
-                <button
-                  onClick={() => {
-                    setSelectedEmployee("ALL");
-                    setSelectedSeverity("ALL");
-                    setSelectedStatus("ALL");
-                    setSearchQuery("");
-                  }}
-                  className="px-2.5 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Audit Records Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-black/40 text-slate-400 border-b border-cyber-border text-[11px] uppercase tracking-wider">
-                <tr>
-                  <th className="py-3 px-4">Event ID / Time</th>
-                  <th className="py-3 px-4">Employee</th>
-                  <th className="py-3 px-4">Action Performed</th>
-                  <th className="py-3 px-4">Target Resource</th>
-                  <th className="py-3 px-4">Source IP</th>
-                  <th className="py-3 px-4">Severity</th>
-                  <th className="py-3 px-4">Risk</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Details</th>
+                  </td>
+                  <td className="py-3 px-4 font-bold text-emerald-400">{r.status}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {filteredRecords.length === 0 ? (
-                  <tr>
-                    <td colSpan={9} className="py-8 text-center text-slate-500">
-                      No employee audit actions match the current filter criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredRecords.map((record) => (
-                    <tr key={record.id} className="hover:bg-slate-800/30 transition-colors">
-                      {/* ID & Time */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-bold text-cyber-cyan">{record.id}</div>
-                        <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Clock className="w-3 h-3" />
-                          <span>{record.timestamp}</span>
-                        </div>
-                      </td>
-
-                      {/* Employee */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="font-semibold text-white">{record.employeeName}</div>
-                        <div className="text-[10px] text-slate-400">
-                          {record.employeeId} &bull; {record.department}
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td className="py-3 px-4">
-                        <div className="font-medium text-slate-200">{record.action}</div>
-                      </td>
-
-                      {/* Target */}
-                      <td className="py-3 px-4 whitespace-nowrap font-mono text-slate-300">
-                        <span className="px-2 py-0.5 rounded bg-black/40 border border-slate-700">
-                          {record.targetResource}
-                        </span>
-                      </td>
-
-                      {/* IP */}
-                      <td className="py-3 px-4 whitespace-nowrap text-slate-400">
-                        {record.sourceIp}
-                      </td>
-
-                      {/* Severity */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            record.severity === "CRITICAL"
-                              ? "bg-cyber-red/20 text-cyber-red border border-cyber-red/40"
-                              : record.severity === "WARN"
-                              ? "bg-cyber-amber/20 text-cyber-amber border border-cyber-amber/40"
-                              : "bg-slate-800 text-slate-300 border border-slate-700"
-                          }`}
-                        >
-                          {record.severity}
-                        </span>
-                      </td>
-
-                      {/* Risk Score */}
-                      <td className="py-3 px-4 whitespace-nowrap font-bold">
-                        <span
-                          className={
-                            record.riskScore > 50
-                              ? "text-cyber-red"
-                              : record.riskScore > 20
-                              ? "text-cyber-amber"
-                              : "text-cyber-emerald"
-                          }
-                        >
-                          {record.riskScore}/100
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center gap-1 text-[11px] font-bold ${
-                            record.status === "SUCCESS"
-                              ? "text-cyber-emerald"
-                              : record.status === "FLAGGED"
-                              ? "text-cyber-red animate-pulse"
-                              : "text-slate-400"
-                          }`}
-                        >
-                          {record.status === "SUCCESS" ? (
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                          ) : (
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                          )}
-                          <span>{record.status}</span>
-                        </span>
-                      </td>
-
-                      {/* Details */}
-                      <td className="py-3 px-4 text-slate-400 max-w-xs truncate text-[11px]">
-                        {record.details}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Footer Status */}
-          <div className="p-3 bg-black/60 border-t border-cyber-border flex items-center justify-between text-[11px] text-slate-500">
-            <span>Showing {filteredRecords.length} of {auditRecords.length} recorded personnel events</span>
-            <span>Cryptographic Chain: HMAC-SHA256 VERIFIED</span>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
-

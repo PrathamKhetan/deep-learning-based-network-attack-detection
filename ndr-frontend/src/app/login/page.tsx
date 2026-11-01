@@ -18,379 +18,265 @@ import {
   ArrowRight,
   Terminal,
   Zap,
-  Info
+  Info,
+  Crown,
+  Sparkles,
+  ArrowLeft
 } from "lucide-react";
-import { useAuth } from "@/lib/authContext";
+import {
+  useAuth,
+  DEMO_CEO,
+  DEMO_MANAGER,
+  DEMO_TEAM_LEAD,
+  DEMO_THREAT_HUNTER,
+  DEMO_EMPLOYEE_DAVID
+} from "@/lib/authContext";
 import { UserRole } from "@/types/auth";
 
 function LoginFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = useAuth();
+  const { login, switchUserPersona } = useAuth();
 
-  // Selected portal: "manager" or "employee"
-  const portalParam = searchParams.get("portal");
-  const [selectedPortal, setSelectedPortal] = useState<UserRole>(
-    portalParam === "employee" ? "employee" : "manager"
-  );
-
-  const [email, setEmail] = useState<string>(
-    selectedPortal === "manager" ? "manager@aegis-defense.corp" : "analyst@aegis-defense.corp"
-  );
-  const [password, setPassword] = useState<string>(
-    selectedPortal === "manager" ? "Manager@2026!" : "Analyst@2026!"
-  );
-  const [badgeId, setBadgeId] = useState<string>(
-    selectedPortal === "manager" ? "CORP-MGR-0091" : "CORP-EMP-4420"
-  );
+  const [selectedRole, setSelectedRole] = useState<UserRole>("ceo");
+  const [email, setEmail] = useState<string>("ceo@aegis-defense.corp");
+  const [password, setPassword] = useState<string>("Ceo@2026!");
+  const [badgeId, setBadgeId] = useState<string>("CORP-EXEC-0001");
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [rememberDevice, setRememberDevice] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Sync credentials when tab switches
-  useEffect(() => {
-    if (selectedPortal === "manager") {
-      setEmail("manager@aegis-defense.corp");
-      setPassword("Manager@2026!");
-      setBadgeId("CORP-MGR-0091");
-    } else {
-      setEmail("analyst@aegis-defense.corp");
-      setPassword("Analyst@2026!");
-      setBadgeId("CORP-EMP-4420");
+  const PERSONAS = [
+    {
+      role: "ceo" as UserRole,
+      data: DEMO_CEO,
+      badge: "TIER 5 SOVEREIGN",
+      bgGradient: "from-amber-500/20 via-rose-500/10 to-indigo-600/20",
+      accentBorder: "border-amber-400/50 hover:border-amber-400",
+      accentText: "text-amber-400",
+      btnClass: "bg-gradient-to-r from-amber-500 to-rose-600 text-white shadow-lg shadow-amber-500/20",
+      email: "ceo@aegis-defense.corp",
+      pass: "Ceo@2026!",
+      badgeId: "CORP-EXEC-0001"
+    },
+    {
+      role: "manager" as UserRole,
+      data: DEMO_MANAGER,
+      badge: "TIER 4 EXECUTIVE",
+      bgGradient: "from-cyan-500/20 via-blue-500/10 to-indigo-600/20",
+      accentBorder: "border-cyan-400/50 hover:border-cyan-400",
+      accentText: "text-cyan-400",
+      btnClass: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20",
+      email: "manager@aegis-defense.corp",
+      pass: "Manager@2026!",
+      badgeId: "CORP-MGR-0091"
+    },
+    {
+      role: "team_lead" as UserRole,
+      data: DEMO_TEAM_LEAD,
+      badge: "TIER 3 LEAD",
+      bgGradient: "from-emerald-500/20 via-teal-500/10 to-cyan-600/20",
+      accentBorder: "border-emerald-400/50 hover:border-emerald-400",
+      accentText: "text-emerald-400",
+      btnClass: "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/20",
+      email: "lead@aegis-defense.corp",
+      pass: "Lead@2026!",
+      badgeId: "CORP-LEAD-2041"
+    },
+    {
+      role: "threat_hunter" as UserRole,
+      data: DEMO_THREAT_HUNTER,
+      badge: "TIER 2 SPECIALIST",
+      bgGradient: "from-purple-500/20 via-violet-500/10 to-pink-600/20",
+      accentBorder: "border-purple-400/50 hover:border-purple-400",
+      accentText: "text-purple-300",
+      btnClass: "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg shadow-purple-500/20",
+      email: "hunter@aegis-defense.corp",
+      pass: "Hunter@2026!",
+      badgeId: "CORP-EMP-3918"
+    },
+    {
+      role: "employee" as UserRole,
+      data: DEMO_EMPLOYEE_DAVID,
+      badge: "TIER 1 OPERATOR",
+      bgGradient: "from-sky-500/20 via-blue-500/10 to-slate-600/20",
+      accentBorder: "border-sky-400/50 hover:border-sky-400",
+      accentText: "text-sky-300",
+      btnClass: "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/20",
+      email: "analyst@aegis-defense.corp",
+      pass: "Analyst@2026!",
+      badgeId: "CORP-EMP-4420"
     }
-    setErrorMessage(null);
-  }, [selectedPortal]);
+  ];
 
-  const handlePortalChange = (role: UserRole) => {
-    setSelectedPortal(role);
+  const handleSelectPersona = (p: typeof PERSONAS[0]) => {
+    setSelectedRole(p.role);
+    setEmail(p.email);
+    setPassword(p.pass);
+    setBadgeId(p.badgeId);
   };
 
-  const handleQuickLogin = async (role: UserRole) => {
+  const handleQuickLogin = async (p: typeof PERSONAS[0]) => {
     setIsLoading(true);
-    setErrorMessage(null);
-    try {
-      const demoEmail = role === "manager" ? "manager@aegis-defense.corp" : "analyst@aegis-defense.corp";
-      await login(demoEmail, role);
-      // If manager, can redirect directly to dashboard or employee-history
-      router.push("/");
-    } catch (err: any) {
-      setErrorMessage(err.message || "Authentication failed");
-      setIsLoading(false);
-    }
+    await login(p.email, p.role);
+    router.push("/");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setErrorMessage(null);
-
     try {
-      // Authenticate with chosen portal role
-      await login(email, selectedPortal);
+      await login(email, selectedRole);
       router.push("/");
     } catch (err: any) {
-      setErrorMessage(err.message || "Corporate identity authentication rejected");
+      setErrorMessage(err.message || "Authentication rejected");
       setIsLoading(false);
     }
   };
 
-  const isManagerPortal = selectedPortal === "manager";
-
   return (
     <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 relative">
       {/* Background Ambience */}
-      <div className="absolute inset-0 bg-cyber-bg pointer-events-none" />
-      <div
-        className={`absolute w-[600px] h-[600px] rounded-full blur-[140px] pointer-events-none transition-colors duration-700 ${
-          isManagerPortal ? "bg-cyber-cyan/10 top-1/4 left-1/3" : "bg-cyber-purple/10 top-1/4 right-1/3"
-        }`}
-      />
+      <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
 
-      {/* Corporate Header & Emblem */}
-      <div className="relative z-10 w-full max-w-xl text-center mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 border border-cyber-border text-xs font-mono text-cyber-cyan mb-3 shadow-neon-cyan">
-          <Building2 className="w-3.5 h-3.5 text-cyber-cyan" />
+      {/* Header */}
+      <div className="relative z-10 w-full max-w-4xl text-center mb-6">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Return to Dashboard</span>
+        </Link>
+
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-xs font-bold text-indigo-300 uppercase tracking-wider mb-2">
+          <Building2 className="w-3.5 h-3.5 text-indigo-400" />
           <span>AEGIS CYBER DEFENSE CORP &bull; ENTERPRISE IAM</span>
         </div>
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white uppercase flex items-center justify-center gap-2">
-          <span>CORPORATE ZERO-TRUST ACCESS GATEWAY</span>
+        <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          Corporate Identity & Access Gateway
         </h1>
-        <p className="text-xs md:text-sm text-slate-400 font-mono mt-1">
-          Role-Based Identity Federation &bull; Dual-Engine SOC Command Portal
+        <p className="text-xs sm:text-sm text-slate-300 mt-1 max-w-xl mx-auto">
+          Role-Based Zero-Trust Authentication across 5 Corporate Tiers (CEO to Normal Employee)
         </p>
       </div>
 
-      {/* Main Login Card */}
-      <div className="relative z-10 w-full max-w-xl cyber-panel rounded-xl overflow-hidden border border-cyber-border shadow-2xl">
-        {/* Compliance / Status Bar */}
-        <div className="bg-black/60 px-5 py-2.5 border-b border-cyber-border flex items-center justify-between text-[11px] font-mono">
-          <div className="flex items-center gap-2 text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-cyber-emerald animate-pulse" />
-            <span>IDP STATUS: ONLINE (TLS 1.3 AES-256)</span>
-          </div>
-          <span className="text-slate-400">SOC-2 TYPE II AUDITED</span>
-        </div>
-
-        {/* Portal Mode Selector Tabs */}
-        <div className="grid grid-cols-2 bg-black/40 border-b border-cyber-border p-1.5 gap-2">
-          {/* Manager Access Portal Tab */}
-          <button
-            type="button"
-            onClick={() => handlePortalChange("manager")}
-            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-mono text-xs md:text-sm font-semibold transition-all ${
-              isManagerPortal
-                ? "bg-cyber-cyan/20 border border-cyber-cyan text-white shadow-neon-cyan"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-            }`}
-          >
-            <ShieldCheck className={`w-4 h-4 ${isManagerPortal ? "text-cyber-cyan" : "text-slate-400"}`} />
-            <div className="text-left">
-              <div className="leading-tight">MANAGER PORTAL</div>
-              <div className="text-[10px] text-cyber-cyan font-normal">Level 4 Executive Clearance</div>
-            </div>
-          </button>
-
-          {/* Employee Access Portal Tab */}
-          <button
-            type="button"
-            onClick={() => handlePortalChange("employee")}
-            className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-mono text-xs md:text-sm font-semibold transition-all ${
-              !isManagerPortal
-                ? "bg-cyber-purple/20 border border-cyber-purple text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-            }`}
-          >
-            <Users className={`w-4 h-4 ${!isManagerPortal ? "text-cyber-purple" : "text-slate-400"}`} />
-            <div className="text-left">
-              <div className="leading-tight">EMPLOYEE PORTAL</div>
-              <div className="text-[10px] text-cyber-purple font-normal">Level 2 Operator Clearance</div>
-            </div>
-          </button>
-        </div>
-
-        {/* Clearance Privileges & Role Distinction Overview */}
-        <div className="p-5 bg-black/30 border-b border-cyber-border/70 text-xs font-mono">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-slate-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-cyber-cyan" />
-              {isManagerPortal ? "Manager Clearance Permissions" : "Employee Clearance Permissions"}
+      {/* Main Container */}
+      <div className="relative z-10 w-full max-w-4xl modular-card p-6 border border-white/10 shadow-2xl rounded-2xl space-y-6">
+        {/* Step 1: Persona Picker */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <Users className="w-4 h-4 text-indigo-400" />
+              <span>Choose Your Corporate Persona Account (1-Click Instant SSO):</span>
             </span>
-            <span
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                isManagerPortal
-                  ? "bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30"
-                  : "bg-cyber-purple/15 text-cyber-purple border border-cyber-purple/30"
-              }`}
-            >
-              {isManagerPortal ? "TIER 4: SUPERVISORY" : "TIER 2: ANALYST"}
-            </span>
+            <span className="text-[11px] text-slate-400">Information Segregated Per Tier</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-slate-300">
-            {isManagerPortal ? (
-              <>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Inspect All Employee History & Audits</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            {PERSONAS.map((p) => {
+              const isSelected = selectedRole === p.role;
+              return (
+                <div
+                  key={p.role}
+                  onClick={() => handleSelectPersona(p)}
+                  className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 flex flex-col justify-between space-y-2 ${
+                    isSelected
+                      ? "border-indigo-400 bg-indigo-950/40 shadow-lg shadow-indigo-500/20 scale-[1.03]"
+                      : "border-white/10 hover:border-white/20 bg-slate-900/60"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xl">{p.data.avatar}</span>
+                      <span className={`text-[8px] px-1.5 py-0.2 rounded font-black ${p.accentText} bg-black/40`}>
+                        {p.badge.split(" ")[1]}
+                      </span>
+                    </div>
+
+                    <div className="font-bold text-white text-xs truncate">{p.data.name}</div>
+                    <div className="text-[10px] text-slate-300 truncate">{p.data.title.split("&")[0]}</div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleQuickLogin(p);
+                    }}
+                    className={`w-full py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all ${p.btnClass}`}
+                  >
+                    1-Click Sign In
+                  </button>
                 </div>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Monitor Team Risk & Revoke Sessions</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Execute Node Quarantine & Remediation</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Export Official SOC 2 Compliance Reports</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>View Real-Time 3D Topology & Flow Gauges</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyber-emerald">
-                  <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                  <span>Inspect Local Traffic & ASM Matrix</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyber-red">
-                  <XCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span className="font-semibold">NO ACCESS to Employee History (403 Forbidden)</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-cyber-red">
-                  <XCircle className="w-3.5 h-3.5 shrink-0" />
-                  <span className="font-semibold">NO ACCESS to Team Supervisory Overrides</span>
-                </div>
-              </>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step 2: Form */}
+        <div className="pt-4 border-t border-white/10">
+          <form onSubmit={handleSubmit} className="space-y-4 max-w-lg mx-auto">
+            {errorMessage && (
+              <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-400/40 text-rose-300 text-xs">
+                {errorMessage}
+              </div>
             )}
-          </div>
-        </div>
 
-        {/* Quick Demo Instant 1-Click Login CTA for Vercel Evaluators */}
-        <div className="px-5 pt-4">
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => handleQuickLogin(selectedPortal)}
-            className={`w-full py-2.5 px-4 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-              isManagerPortal
-                ? "bg-gradient-to-r from-cyber-cyan/30 to-cyber-cyan/10 hover:from-cyber-cyan/40 hover:to-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan shadow-neon-cyan"
-                : "bg-gradient-to-r from-cyber-purple/30 to-cyber-purple/10 hover:from-cyber-purple/40 hover:to-cyber-purple/20 border border-cyber-purple text-purple-200"
-            }`}
-          >
-            <Zap className="w-4 h-4 text-cyber-amber animate-pulse" />
-            <span>
-              ⚡ Instant 1-Click SSO Demo Login (as {isManagerPortal ? "Manager: Cmdr. Jenkins" : "Employee: David Vance"})
-            </span>
-          </button>
-        </div>
-
-        {/* Form Separator */}
-        <div className="px-5 py-3 flex items-center gap-3">
-          <div className="flex-1 h-px bg-slate-800" />
-          <span className="text-[10px] font-mono text-slate-500 uppercase">OR ENTER CORPORATE CREDENTIALS</span>
-          <div className="flex-1 h-px bg-slate-800" />
-        </div>
-
-        {/* Standard Corporate Form */}
-        <form onSubmit={handleSubmit} className="px-5 pb-5 space-y-4 font-mono text-xs">
-          {errorMessage && (
-            <div className="p-3 rounded-lg bg-cyber-red/15 border border-cyber-red/50 text-cyber-red flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
-
-          {/* Email */}
-          <div>
-            <label className="block text-slate-300 mb-1 font-semibold flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5 text-cyber-cyan" />
-              <span>Corporate SSO Email Address</span>
-            </label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={isManagerPortal ? "manager@aegis-defense.corp" : "analyst@aegis-defense.corp"}
-              className="w-full bg-slate-900/90 border border-slate-700 focus:border-cyber-cyan rounded-lg px-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan transition-all"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-slate-300 mb-1 font-semibold flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-cyber-cyan" />
-                <span>Enterprise Passphrase / Security Token</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-slate-400 hover:text-cyber-cyan flex items-center gap-1 text-[10px]"
-              >
-                {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{showPassword ? "Hide" : "Show"}</span>
-              </button>
-            </label>
-            <div className="relative">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Corporate Email</label>
               <input
-                type={showPassword ? "text" : "password"}
+                type="email"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••••••"
-                className="w-full bg-slate-900/90 border border-slate-700 focus:border-cyber-cyan rounded-lg px-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan transition-all"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-400"
               />
             </div>
-          </div>
 
-          {/* Employee Badge ID */}
-          <div>
-            <label className="block text-slate-300 mb-1 font-semibold flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5 text-cyber-cyan" />
-              <span>Workstation Security Clearance Badge ID</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={badgeId}
-              onChange={(e) => setBadgeId(e.target.value)}
-              placeholder={isManagerPortal ? "CORP-MGR-0091" : "CORP-EMP-4420"}
-              className="w-full bg-slate-900/90 border border-slate-700 focus:border-cyber-cyan rounded-lg px-3 py-2.5 text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-cyber-cyan transition-all"
-            />
-          </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Enterprise Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-white"
+                >
+                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
 
-          {/* Remember Workstation Hardware Check */}
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer text-slate-400 text-[11px]">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1">Badge Clearance Token</label>
               <input
-                type="checkbox"
-                checked={rememberDevice}
-                onChange={(e) => setRememberDevice(e.target.checked)}
-                className="rounded border-slate-700 bg-slate-900 text-cyber-cyan focus:ring-0"
+                type="text"
+                required
+                value={badgeId}
+                onChange={(e) => setBadgeId(e.target.value)}
+                className="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-3 py-2 text-white text-xs focus:outline-none focus:border-indigo-400 font-mono"
               />
-              <span>Verify Hardware FIDO2 / YubiKey token</span>
-            </label>
-            <span className="text-[10px] text-cyber-cyan/70">Continuous ZTA Active</span>
-          </div>
+            </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full py-3 px-4 rounded-lg font-mono text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 text-white transition-all ${
-              isManagerPortal
-                ? "bg-cyber-cyan/30 hover:bg-cyber-cyan/40 border border-cyber-cyan text-cyber-cyan shadow-neon-cyan"
-                : "bg-cyber-purple/30 hover:bg-cyber-purple/40 border border-cyber-purple text-purple-200"
-            }`}
-          >
-            {isLoading ? (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                VERIFYING CLEARANCE HASH...
-              </span>
-            ) : (
-              <>
-                <span>AUTHENTICATE & ENTER {isManagerPortal ? "MANAGER COMMAND" : "EMPLOYEE WORKSPACE"}</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Direct Link Options */}
-        <div className="px-5 py-3 bg-black/50 border-t border-cyber-border/50 flex flex-wrap items-center justify-between text-[11px] font-mono text-slate-400">
-          <span>Dedicated Endpoints:</span>
-          <div className="flex items-center gap-3">
-            <Link href="/login/manager" className="text-cyber-cyan hover:underline">
-              /login/manager
-            </Link>
-            <span className="text-slate-600">&bull;</span>
-            <Link href="/login/employee" className="text-cyber-purple hover:underline">
-              /login/employee
-            </Link>
-            <span className="text-slate-600">&bull;</span>
-            <Link href="/employee-history" className="text-amber-400 hover:underline">
-              /employee-history
-            </Link>
-          </div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+            >
+              {isLoading ? "Authenticating Clearance..." : "Enter Aegis Enterprise Operations"}
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </form>
         </div>
-      </div>
-
-      {/* Corporate Compliance & Legal Disclaimer Footer */}
-      <div className="relative z-10 w-full max-w-xl mt-4 text-center font-mono text-[10px] text-slate-500 leading-relaxed">
-        <p>
-          CONFIDENTIAL &bull; AUTHORIZED PERSONNEL ONLY. ALL TRANSACTIONS AND NETWORK PACKETS ARE MONITORED,
-          ENCRYPTED, AND ARCHIVED IN COMPLIANCE WITH SOC 2 TYPE II AND NIST SP 800-53 STANDARDS.
-        </p>
-        <p className="mt-1 text-slate-600">
-          Aegis Cyber Defense Systems &bull; Enterprise Incident Response &bull; Threat Telemetry Engine v2.0
-        </p>
       </div>
     </div>
   );
@@ -398,7 +284,7 @@ function LoginFormContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-cyber-bg flex items-center justify-center text-cyber-cyan font-mono text-sm">INITIALIZING IDENTITY PROVIDER GATEWAY...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0e1a] flex items-center justify-center text-indigo-400 text-sm">INITIALIZING ENTERPRISE IAM...</div>}>
       <LoginFormContent />
     </Suspense>
   );

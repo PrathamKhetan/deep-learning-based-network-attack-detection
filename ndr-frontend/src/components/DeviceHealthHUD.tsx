@@ -235,3 +235,4 @@ export const DeviceHealthHUD: React.FC<Props> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+

@@ -254,7 +254,29 @@ export const CommandCenterHeader: React.FC<Props> = ({
                   Switch Employee Persona & Device
                 </div>
 
-                {/* 1. Sarah Jenkins (Manager) */}
+                {/* 1. Victoria Sterling (CEO) */}
+                <button
+                  onClick={() => {
+                    switchUserPersona("ceo");
+                    setIsPersonaOpen(false);
+                  }}
+                  className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
+                    user?.id === "usr_ceo_001"
+                      ? "bg-amber-500/20 text-amber-300 border border-amber-400"
+                      : "hover:bg-slate-800/80 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>👑</span>
+                    <div>
+                      <div className="font-bold text-white">Victoria Sterling</div>
+                      <div className="text-[9px] text-slate-400">CEO &bull; Tier-5 Sovereign</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-amber-300 font-bold">C-SUITE</span>
+                </button>
+
+                {/* 2. Sarah Jenkins (Manager) */}
                 <button
                   onClick={() => {
                     switchUserPersona("manager");
@@ -262,72 +284,84 @@ export const CommandCenterHeader: React.FC<Props> = ({
                   }}
                   className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
                     user?.id === "usr_mgr_001"
-                      ? "bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan"
+                      ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400"
                       : "hover:bg-slate-800/80 text-slate-300"
                   }`}
                 >
-                  <div>
-                    <div className="font-bold text-white">Cmdr. Sarah Jenkins</div>
-                    <div className="text-[9px] text-slate-400">Manager &bull; Global Multi-Zone</div>
+                  <div className="flex items-center gap-2">
+                    <span>👔</span>
+                    <div>
+                      <div className="font-bold text-white">Cmdr. Sarah Jenkins</div>
+                      <div className="text-[9px] text-slate-400">Director of SOC &bull; Tier-4</div>
+                    </div>
                   </div>
-                  <span className="text-[9px] text-cyber-cyan font-bold">EXEC</span>
+                  <span className="text-[9px] text-cyan-300 font-bold">EXEC</span>
                 </button>
 
-                {/* 2. David Vance (Analyst L2) */}
+                {/* 3. Alexander Stone (Lead) */}
                 <button
                   onClick={() => {
-                    switchUserPersona("david");
+                    switchUserPersona("lead");
+                    setIsPersonaOpen(false);
+                  }}
+                  className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
+                    user?.id === "usr_lead_002"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400"
+                      : "hover:bg-slate-800/80 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>🛡️</span>
+                    <div>
+                      <div className="font-bold text-white">Alexander Stone</div>
+                      <div className="text-[9px] text-slate-400">Incident Lead &bull; Tier-3</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-emerald-300 font-bold">LEAD</span>
+                </button>
+
+                {/* 4. Elena Rostova (Hunter) */}
+                <button
+                  onClick={() => {
+                    switchUserPersona("hunter");
+                    setIsPersonaOpen(false);
+                  }}
+                  className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
+                    user?.id === "usr_hunter_003"
+                      ? "bg-purple-500/20 text-purple-200 border border-purple-400"
+                      : "hover:bg-slate-800/80 text-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>🦅</span>
+                    <div>
+                      <div className="font-bold text-white">Elena Rostova</div>
+                      <div className="text-[9px] text-slate-400">Threat Hunter L3 &bull; Tier-2</div>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-purple-300 font-bold">K8S</span>
+                </button>
+
+                {/* 5. David Vance (Normal Employee) */}
+                <button
+                  onClick={() => {
+                    switchUserPersona("employee");
                     setIsPersonaOpen(false);
                   }}
                   className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
                     user?.id === "usr_emp_442"
-                      ? "bg-cyber-purple/20 text-purple-200 border border-cyber-purple"
+                      ? "bg-sky-500/20 text-sky-200 border border-sky-400"
                       : "hover:bg-slate-800/80 text-slate-300"
                   }`}
                 >
-                  <div>
-                    <div className="font-bold text-white">David Vance</div>
-                    <div className="text-[9px] text-slate-400">Analyst L2 &bull; Sector B DMZ (WS-104)</div>
+                  <div className="flex items-center gap-2">
+                    <span>🔰</span>
+                    <div>
+                      <div className="font-bold text-white">David Vance</div>
+                      <div className="text-[9px] text-slate-400">Analyst L1 &bull; Tier-1 Operator</div>
+                    </div>
                   </div>
-                  <span className="text-[9px] text-cyber-purple font-bold">DMZ</span>
-                </button>
-
-                {/* 3. Elena Rostova (Threat Hunter L3) */}
-                <button
-                  onClick={() => {
-                    switchUserPersona("elena");
-                    setIsPersonaOpen(false);
-                  }}
-                  className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
-                    user?.id === "usr_emp_391"
-                      ? "bg-cyber-purple/20 text-purple-200 border border-cyber-purple"
-                      : "hover:bg-slate-800/80 text-slate-300"
-                  }`}
-                >
-                  <div>
-                    <div className="font-bold text-white">Elena Rostova</div>
-                    <div className="text-[9px] text-slate-400">Threat Hunter L3 &bull; Sector C K8s (WS-208)</div>
-                  </div>
-                  <span className="text-[9px] text-cyber-purple font-bold">K8S</span>
-                </button>
-
-                {/* 4. Marcus Chen (Junior Analyst L1) */}
-                <button
-                  onClick={() => {
-                    switchUserPersona("marcus");
-                    setIsPersonaOpen(false);
-                  }}
-                  className={`w-full text-left p-2 rounded-lg flex items-center justify-between text-[11px] transition-colors ${
-                    user?.id === "usr_emp_510"
-                      ? "bg-cyber-purple/20 text-purple-200 border border-cyber-purple"
-                      : "hover:bg-slate-800/80 text-slate-300"
-                  }`}
-                >
-                  <div>
-                    <div className="font-bold text-white">Marcus Chen</div>
-                    <div className="text-[9px] text-slate-400">Junior Analyst L1 &bull; Sector A LAN (WS-312)</div>
-                  </div>
-                  <span className="text-[9px] text-cyber-purple font-bold">LAN</span>
+                  <span className="text-[9px] text-sky-300 font-bold">STAFF</span>
                 </button>
               </div>
             )}

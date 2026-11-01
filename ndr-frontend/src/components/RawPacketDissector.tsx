@@ -220,3 +220,4 @@ export const RawPacketDissector: React.FC<Props> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+

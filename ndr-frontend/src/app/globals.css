@@ -3,96 +3,118 @@
 @tailwind utilities;
 
 :root {
-  --cyber-bg: #040711;
-  --cyber-card: #090e1f;
-  --cyber-border: rgba(0, 240, 255, 0.16);
-  --cyber-cyan: #00f0ff;
-  --cyber-emerald: #00ff9d;
-  --cyber-red: #ff0055;
-  --cyber-amber: #ffb700;
+  --color-bg-base: #0a0e1a;
+  --color-surface-glass: rgba(15, 23, 42, 0.75);
+  --color-border-glass: rgba(255, 255, 255, 0.12);
+  --color-brand-cyan: #06b6d4;
+  --color-brand-violet: #8b5cf6;
+  --color-brand-emerald: #10b981;
+  --color-brand-amber: #f59e0b;
+  --color-brand-rose: #f43f5e;
 }
 
 body {
-  background-color: var(--cyber-bg);
-  color: #e2e8f0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  background-color: var(--color-bg-base);
+  color: #f1f5f9;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   background-image: 
-    radial-gradient(circle at 50% 0%, rgba(0, 240, 255, 0.08) 0%, transparent 60%),
-    radial-gradient(circle at 10% 90%, rgba(0, 255, 157, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 90% 90%, rgba(255, 0, 85, 0.05) 0%, transparent 40%);
+    radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.18) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.16) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(6, 182, 212, 0.14) 0%, transparent 50%),
+    radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.12) 0%, transparent 40%);
+  background-attachment: fixed;
 }
 
-/* Cyberpunk Grid Background */
-.cyber-grid {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(0, 240, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 240, 255, 0.04) 1px, transparent 1px);
+/* Modern Modular Glassmorphic Cards */
+.modular-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Glassmorphism SOC Card */
+.modular-card:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Glass panel variants */
 .cyber-panel {
-  background: rgba(9, 14, 31, 0.75);
+  background: rgba(15, 23, 42, 0.72);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 240, 255, 0.18);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
 }
 
 .cyber-panel-red {
-  background: rgba(30, 8, 16, 0.85);
+  background: rgba(45, 12, 25, 0.85);
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 0, 85, 0.4);
-  box-shadow: 0 0 30px rgba(255, 0, 85, 0.25), inset 0 0 15px rgba(255, 0, 85, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.5);
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.25);
 }
 
-/* Scanline effect */
-.scanlines {
-  position: relative;
-  overflow: hidden;
+/* Subtle Tech Grid overlay */
+.cyber-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
 }
 
-.scanlines::before {
-  content: " ";
-  display: block;
-  position: absolute;
-  top: 0; left: 0; bottom: 0; right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-  background-size: 100% 4px;
-  z-index: 20;
-  pointer-events: none;
-  opacity: 0.35;
+/* Vibrant Glow & Gradient Text */
+.gradient-text-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Custom Cyber Scrollbar */
+.gradient-text-cyan {
+  background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-violet {
+  background: linear-gradient(135deg, #c084fc 0%, #a855f7 50%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #060914;
+  background: #090d19;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 240, 255, 0.25);
-  border-radius: 3px;
+  background: rgba(99, 102, 241, 0.35);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 240, 255, 0.5);
+  background: rgba(99, 102, 241, 0.65);
 }
 
-/* Glow effects */
-.glow-text-cyan {
-  text-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-12px) scale(1.05); }
 }
 
-.glow-text-emerald {
-  text-shadow: 0 0 8px rgba(0, 255, 157, 0.6);
-}
-
-.glow-text-red {
-  text-shadow: 0 0 10px rgba(255, 0, 85, 0.8);
+.animate-float {
+  animation: floatOrb 6s ease-in-out infinite;
 }

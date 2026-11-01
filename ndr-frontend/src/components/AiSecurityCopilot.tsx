@@ -202,3 +202,4 @@ export const AiSecurityCopilot: React.FC<Props> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+
